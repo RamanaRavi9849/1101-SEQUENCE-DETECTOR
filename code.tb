@@ -1,0 +1,50 @@
+`timescale 1ns / 1ps
+
+
+
+module seq_dectector_t();
+
+  reg clk, rst, in;
+  wire out_mealy_ov, out_mealy_noov;
+  wire out_moore_ov, out_moore_noov;
+
+  // Clock generation
+  initial begin
+    clk = 0;
+    forever #5 clk = ~clk; // 10ns clock period
+  end
+
+  // Instantiate all detectors
+   seq_dectector              mealy_ov_inst(clk, rst, in, out_mealy_ov);
+  seq_det_mealy_no_overlap    mealy_noov_inst(clk, rst, in, out_mealy_noov);
+  seq_det_moore_overlap       moore_ov_inst(clk, rst, in, out_moore_ov);
+  seq_det_moore_no_overlap    moore_noov_inst(clk, rst, in, out_moore_noov);
+
+  // Apply stimulus
+  initial begin
+    $display("Starting 1101 Sequence Detector Testbench");
+    $monitor("Time=%0t | in=%b | Mealy[Ovl=%b, NoOvl=%b] | Moore[Ovl=%b, NoOvl=%b]",
+             $time, in, out_mealy_ov, out_mealy_noov, out_moore_ov, out_moore_noov);
+
+    rst = 0; in = 0; #12;
+    rst = 1;
+
+    // Test sequence: 1 1 0 1 1 0 1 (should detect twice in overlapping mode)
+    in = 1; #10;
+    in = 1; #10;
+    in = 0; #10;
+    in = 1; #10;
+    in = 1; #10;
+    in = 0; #10;
+    in = 1; #10;
+
+    // End simulation
+    #20;
+    $finish;
+  end
+
+
+////////
+
+  
+endmodule
